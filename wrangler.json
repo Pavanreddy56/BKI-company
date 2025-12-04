@@ -1,9 +1,5 @@
 {
-  "name": "bluekailash-frontend",
-  "pages_build_output_dir": "./client/dist"
+  "name": "bluekailash-client",
+  "pages_build_output_dir": "client/dist"
 }
-{
-  "name": "bluekailash-api",
-  "main": "server/index.ts",
-  "compatibility_date": "2024-12-01"
-}
+
