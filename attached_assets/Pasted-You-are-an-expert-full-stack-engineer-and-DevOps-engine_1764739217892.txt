@@ -1,0 +1,115 @@
+You are an expert full-stack engineer and DevOps engineer. I have an import-export startup web app (Blue Kailash International) with frontend (React + Tailwind) and backend (Node.js + Express + Prisma + PostgreSQL). The admin page currently appears broken / not connected to some features. I want a complete end-to-end working codebase with separated frontend, backend and database folders, full Docker support, CI scripts to publish images to Docker Hub, and documentation. Produce all files and make the admin panel fully wired to the site so every feature works end-to-end.
+
+Important requirements — produce these EXACT outputs and files in the project root:
+
+1. Folder layout (exact):
+   - /frontend
+     - src/pages (home, about, products, request-quote, track, client-login, client-dashboard, admin-login)
+     - src/components (Nav, Footer, ProductCard, QuoteForm, ShipmentTracker, AdminWidgets)
+     - src/services/api.js (axios instance)
+     - tailwind.config.js
+     - package.json
+     - Dockerfile
+     - README_FRONTEND.md
+   - /backend
+     - src/controllers (auth, clients, products, quotes, shipments, invoices, documents, admin)
+     - src/routes (index.js wire-up)
+     - src/middleware (auth, roleCheck, errorHandler, uploadValidator)
+     - src/services (fileService, pdfService, trackingService)
+     - prisma/schema.prisma
+     - prisma/migrations (initial migration SQL)
+     - prisma/seed.js (seed sample admin user, clients, products, shipments)
+     - Dockerfile
+     - package.json
+     - server.js (app entry)
+     - README_BACKEND.md
+   - /docker
+     - docker-compose.yml (production-ready, volumes, networks, depends_on)
+     - nginx/default.conf (proxy and static rules)
+     - .env.example
+     - push_to_dockerhub.sh (script to build, tag, push frontend & backend to Docker Hub)
+   - README.md (root)
+   - PAVAN.md (deployment + edit instructions)
+   - scripts/setup_local.sh (initialize env, run migrations, seed)
+   - .github/workflows/ci-publish.yml (optional; build & push on push to main)
+   - .secrets.example (placeholders for secrets; not real secrets)
+
+2. Admin page fixes and end-to-end wiring:
+   - Ensure Admin Dashboard UI components call the correct backend APIs. Implement missing endpoints if needed.
+   - Admin must be able to:
+     - View clients list, click client → view shipments & invoices
+     - Create / Edit / Delete products
+     - Create quotes and convert quote → shipment
+     - Create shipments and upload BL/invoice/packing list docs
+     - Update shipment status (Pending → In Transit → Customs → Delivered)
+     - Generate and download invoice PDF (backend endpoint generates PDF and returns URL)
+   - Implement real-time status update option (simple polling endpoint: `GET /admin/shipments/updates`).
+   - Implement role-based middleware (admin-only endpoints protected).
+   - Implement healthcheck endpoints:
+     - `GET /health` — returns status + DB ping
+     - `GET /admin/health` — for admin UI to show backend status
+
+3. Backend details:
+   - Use Prisma + PostgreSQL. Provide `prisma/schema.prisma` & `prisma/seed.js` with sample data (admin: admin@bluekailash.international / password placeholder).
+   - Implement file uploads via Multer into `/uploads/YYYYMMDD/` and return secure URLs served by Nginx.
+   - Implement `GET /shipments/track/:trackingNumber` public endpoint and `GET /admin/shipments/:id` for full details.
+   - Implement `POST /auth/login`, `POST /auth/register`, `GET /auth/me`, token refresh endpoints.
+   - Implement `POST /invoices` to create invoice record and generate PDF (use pdfkit or puppeteer stub) and save to `/invoices`.
+
+4. Dockerization:
+   - Create production-ready Dockerfiles for both frontend and backend.
+   - `docker-compose.yml` should define services: frontend, backend, postgres, nginx, and an admin_worker (optional).
+   - Compose must configure separate named volumes for `pgdata` and `uploads`.
+   - Provide healthchecks for backend service in compose.
+   - Add instructions and script `push_to_dockerhub.sh` that:
+     - Builds frontend and backend images
+     - Tags them as `DOCKERHUB_USERNAME/bluekailash-frontend:latest` and `DOCKERHUB_USERNAME/bluekailash-backend:latest`
+     - Pushes to Docker Hub (expect user to set DOCKERHUB_USERNAME & DOCKERHUB_TOKEN env variables)
+   - Provide `docker-compose.prod.yml` with production environment variable overrides.
+
+5. Database separation & migrations:
+   - Provide Prisma migration SQL to create tables.
+   - Provide seed script (prisma/seed.js) that creates an admin user + sample data.
+   - Provide `scripts/setup_local.sh` to bring up DB, run `npx prisma migrate deploy` and `node prisma/seed.js`.
+
+6. Editable backend config for non-developers:
+   - Provide an `admin settings` endpoint and UI where admin can change site-wide values (company name, contact email, support phone, default invoice terms, sample homepage hero text). These settings should be stored in DB and reflected to frontend via `GET /public/settings`.
+   - Document how to change those values from admin UI and how they map to configuration.
+
+7. Documentation & README:
+   - README.md should include short project overview and exact commands to run locally (development) and to run production with Docker Compose.
+   - `PAVAN.md` must include a step-by-step guide for:
+     - Building and tagging docker images
+     - Pushing to Docker Hub
+     - Deploying on remote VPS (pull images, run compose)
+     - Running DB migrations & seed on production
+     - How to update code and redeploy images
+     - How to modify backend settings from admin UI
+     - Troubleshooting common errors (DB connection refused, file permissions, CORS, SSL)
+
+8. CI/CD:
+   - Provide a sample GitHub Actions workflow `.github/workflows/ci-publish.yml` that builds and pushes images when a commit is merged to main (use Docker Hub). Put placeholders for secrets.
+
+9. Deliverable files content:
+   - Provide fully working `docker-compose.yml` with environment variable placeholders, networks, volumes, and recommended resource limits.
+   - Provide `.env.example` with variable explanations.
+   - Provide `nginx/default.conf` that:
+     - Serves frontend static files
+     - Proxies `/api` to backend
+     - Serves `/uploads` and `/invoices` directory
+     - Sets security headers and gzip
+
+10. Testing & verification:
+    - Add a small script `tests/smoke_test.sh` that uses `curl` to call `/health`, `/auth/login` (with seeded admin), `/products` and report success/fail.
+    - Provide instructions to run the smoke test after deployment.
+
+11. Developer friendliness:
+    - Provide dev scripts in package.json: `dev`, `start`, `seed`, `migrate`.
+    - Provide clear comments in code where admin-related wiring occurs (controllers and frontend admin components) so I can edit later.
+
+Behavior: create working code stubs that run locally (assume secrets filled) and comment where the user must replace placeholders (Docker Hub username, real secrets). Prioritize making the admin → feature connections complete and end-to-end (UI ↔ API ↔ DB ↔ file storage ↔ PDF generation). Also generate `README_FRONTEND.md` and `README_BACKEND.md` with targeted instructions.
+
+Finally, at the end of the Replit generation, include a ZIP-friendly list of all output files so I can verify the generator produced everything.
+
+Do not ask clarifying questions — produce the full project skeleton and content above.
+
